@@ -106,8 +106,9 @@ tr:hover{background:rgba(233,30,140,.03)}
 .chart-container{position:relative;height:260px;margin-top:16px}
 .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:16px}
 @media(max-width:900px){.charts-grid{grid-template-columns:1fr}}
-.chart-card{background:rgba(255,255,255,.02);border-radius:14px;padding:20px;border:1px solid rgba(255,255,255,.05)}
-.chart-card h3{font-size:.9em;color:rgba(255,255,255,.6);margin-bottom:12px;font-weight:600}
+.chart-card{background:rgba(255,255,255,.02);border-radius:14px;padding:16px;border:1px solid rgba(255,255,255,.05)}
+.chart-card h3{font-size:.85em;color:rgba(255,255,255,.6);margin-bottom:8px;font-weight:600}
+.chart-card canvas{max-height:180px}
 
 /* Tags */
 .tag{display:inline-block;padding:3px 10px;border-radius:12px;font-size:.72em;margin:2px;background:rgba(233,30,140,.08);color:#ff6b9d;border:1px solid rgba(233,30,140,.15);font-weight:500}
@@ -210,10 +211,10 @@ tr:hover{background:rgba(233,30,140,.03)}
 <div class="section glass fade-in">
 <h2>历史趋势</h2>
 <div class="charts-grid">
-<div class="chart-card"><h3>超话粉丝数</h3><canvas id="chart-chahua-fans"></canvas></div>
-<div class="chart-card"><h3>粉丝数对比</h3><canvas id="chart-fans-compare"></canvas></div>
-<div class="chart-card"><h3>互动量对比</h3><canvas id="chart-interact"></canvas></div>
-<div class="chart-card"><h3>最热帖互动对比</h3><canvas id="chart-top"></canvas></div>
+<div class="chart-card"><h3>超话粉丝数</h3><div style="height:160px"><canvas id="chart-chahua-fans"></canvas></div></div>
+<div class="chart-card"><h3>粉丝数对比</h3><div style="height:160px"><canvas id="chart-fans-compare"></canvas></div></div>
+<div class="chart-card"><h3>互动量对比</h3><div style="height:160px"><canvas id="chart-interact"></canvas></div></div>
+<div class="chart-card"><h3>最热帖互动对比</h3><div style="height:160px"><canvas id="chart-top"></canvas></div></div>
 </div>
 </div>
 
@@ -313,7 +314,6 @@ function toggleComments(uid){
 
 // === Chart Helper ===
 function makeChart(id,labels,datasets,type='line',opts={}){
-  if(typeof Chart==='undefined')return;
   try{
   const ctx=document.getElementById(id);if(!ctx)return;
   new Chart(ctx,{type,data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{color:'#aaa',font:{size:11},boxWidth:10}}},scales:{x:{ticks:{color:'#666',font:{size:10},maxTicksLimit:10},grid:{color:'rgba(255,255,255,.03)'}},y:{ticks:{color:'#666',font:{size:10}},grid:{color:'rgba(255,255,255,.03)'}}},...opts}});
@@ -380,8 +380,15 @@ function loadData(history){
     analysisEl.innerHTML='<div style="color:rgba(255,255,255,.3);text-align:center;padding:20px;">暂无分析数据</div>';
   }
 
-  // Charts
-  const labels=history.map(h=>(h.date||'').slice(5));
+  // Charts - defer until Chart.js is loaded
+  window._chartData={labels:history.map(h=>(h.date||'').slice(5)),history:history};
+  renderCharts();
+}
+
+function renderCharts(){
+  if(typeof Chart==='undefined'){setTimeout(renderCharts,500);return;}
+  const labels=window._chartData.labels;
+  const history=window._chartData.history;
 
   makeChart('chart-sz-fans',labels,[{label:'孙政粉丝',data:history.map(h=>parseNum(h.sunzheng_fans)),borderColor:'#64b4ff',backgroundColor:'rgba(100,180,255,.1)',fill:true,tension:.4,pointRadius:3}]);
   makeChart('chart-lt-fans',labels,[{label:'吕思瞳粉丝',data:history.map(h=>parseNum(h.lvtong_fans)),borderColor:'#4ecdc4',backgroundColor:'rgba(78,205,196,.1)',fill:true,tension:.4,pointRadius:3}]);
